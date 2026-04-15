@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
     internal static class Program
     {

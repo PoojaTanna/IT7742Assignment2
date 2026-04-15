@@ -1,283 +1,366 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
+    // Main form of application
     public partial class Form1 : Form
     {
-        private CustomerController controller = new CustomerController();
-        private Account _currentAccount;
+        // Store current selected customer
+        Customer currentCustomer;
 
+        // Store current selected account
+        Account currentAccount;
+
+        // List to store all customers and accounts
+        List<Customer> customerData = new List<Customer>();
+
+        // Constructor
         public Form1()
         {
             InitializeComponent();
+
+            // Attach events
+            this.Load += Form1_Load;
+            this.FormClosing += Form1_FormClosing;
         }
 
-        private void label1_Click(object sender, EventArgs e)
-        {
-
-        }
-
+        // Runs when form loads
         private void Form1_Load(object sender, EventArgs e)
         {
+            // Load saved data from file
+            customerData = DataPersistence.LoadData();
 
-        }
+            // Show customer panel by default
+            panelCustomer.Visible = true;
+            panelAccount.Visible = false;
+            panelTransfer.Visible = false;
 
-        private void label5_Click(object sender, EventArgs e)
-        {
+            // Select customer radio button
+            rbtnCustomer.Checked = true;
 
-        }
-
-        private void btnRemoveCustomer_Click(object sender, EventArgs e)
-        {
-            try
+            // Add all account IDs to combo boxes
+            foreach (var cust in customerData)
             {
-                string email = txtEmail.Text.Trim();
-
-                if (string.IsNullOrWhiteSpace(email))
+                foreach (var acc in cust.Accounts)
                 {
-                    Message.Items.Add("Enter email to remove customer.");
-                    return;
+                    cmbFromAcc.Items.Add(acc.AccountID);
+                    cmbToAcc.Items.Add(acc.AccountID);
                 }
-
-                controller.RemoveCustomer(email);
-                Message.Items.Add("Customer removed.");
             }
-            catch (Exception ex)
+        }
+
+        // Runs when form is closing
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Save all data to file
+            DataPersistence.SaveData(customerData);
+        }
+
+        // Show customer panel
+        private void rbtnCustomer_CheckedChanged(object sender, EventArgs e)
+        {
+            panelCustomer.Visible = true;
+            panelAccount.Visible = false;
+            panelTransfer.Visible = false;
+        }
+
+        // Show account panel
+        private void rbtnAccount_CheckedChanged(object sender, EventArgs e)
+        {
+            panelCustomer.Visible = false;
+            panelAccount.Visible = true;
+            panelTransfer.Visible = false;
+        }
+
+        // Show transfer panel
+        private void rbtnTransfer_CheckedChanged(object sender, EventArgs e)
+        {
+            panelCustomer.Visible = false;
+            panelAccount.Visible = false;
+            panelTransfer.Visible = true;
+        }
+
+        // Add new customer
+        private void btnAddCustomer_Click(object sender, EventArgs e)
+        {
+            int number;
+            string name = txtCusName.Text;
+            string email = txtCusEmail.Text;
+            bool isEmployee = chkStaff.Checked;
+
+            // Check if number is empty
+            if (txtCusNumber.Text == "")
             {
-                Message.Items.Add(ex.Message);
+                MessageBox.Show("Enter customer number");
             }
-        }
-
-        private void cmbAccountType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void btnAdd_Click(object sender, EventArgs e)
-        {
-            try
+            // Check email
+            else if (email == "")
             {
-                string fullName = txtFullName.Text.Trim();
-                string email = txtEmail.Text.Trim();
-                bool isStaff = chkStaff.Checked;
-
-                if (string.IsNullOrWhiteSpace(fullName))
-                {
-                    Message.Items.Add("Please enter full name.");
-                    return;
-                }
-
-                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
-                {
-                    Message.Items.Add("Email format is invalid.");
-                    return;
-                }
-
-                controller.AddCustomer(fullName, email, isStaff);
-
-                Message.Items.Add($"Customer Created: {fullName} = Email: {email} {(isStaff ? "Employee" : "Customer")}");
+                MessageBox.Show("Enter email");
             }
-            catch (Exception ex)
+            // Convert number
+            else if (int.TryParse(txtCusNumber.Text, out number))
             {
-                Message.Items.Add(ex.Message);
+                // Create customer object
+                Customer c = new Customer(number, name, email, isEmployee);
+
+                // Add to list
+                customerData.Add(c);
+
+                // Set current customer
+                currentCustomer = c;
+
+                // Show output
+                lstOutput.Items.Add("Customer added: " + name);
+            }
+            else
+            {
+                MessageBox.Show("Enter valid number");
             }
         }
 
-        private void txtEmail_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txtCustomerNo_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void txtFullName_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void btnCreateAccount_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
+        // Update customer details
         private void btnUpdateCustomer_Click(object sender, EventArgs e)
         {
-            try
+            int number;
+            string name = txtCusName.Text;
+            string email = txtCusEmail.Text;
+            bool isEmployee = chkStaff.Checked;
+
+            // Convert number
+            if (int.TryParse(txtCusNumber.Text, out number))
             {
-                string fullName = txtFullName.Text.Trim();
-                string email = txtEmail.Text.Trim();
-                bool isStaff = chkStaff.Checked;
+                // Find customer
+                var customer = customerData.FirstOrDefault(c => c.CustomerNumber == number);
 
-                if (string.IsNullOrWhiteSpace(fullName))
+                if (customer != null)
                 {
-                    Message.Items.Add("Please enter full name.");
-                    return;
+                    // Update details
+                    customer.CustomerName = name;
+                    customer.Email = email;
+                    customer.IsEmployee = isEmployee;
+
+                    lstOutput.Items.Add("Customer updated");
                 }
-
-                if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
-                {
-                    Message.Items.Add("Email format is invalid.");
-                    return;
-                }
-
-                controller.UpdateCustomer(email, fullName, isStaff);
-
-                Message.Items.Add("Customer updated.");
-            }
-            catch (Exception ex)
-            {
-                Message.Items.Add(ex.Message);
-            }
-        }
-
-        private void btnCreateAcc_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                if (!int.TryParse(txtAccountId.Text, out int accountId))
-                {
-                    Message.Items.Add("Please enter a valid AccountID.");
-                    return;
-                }
-
-                string type = cmbAccountType.Text?.Trim();
-                if (string.IsNullOrWhiteSpace(type))
-                {
-                    Message.Items.Add("Please select account type.");
-                    return;
-                }
-
-                if (type == "Everyday")
-                    _currentAccount = new EverydayAccount(accountId, 0);
-                else if (type == "Investment")
-                    _currentAccount = new InvestmentAccount(accountId, 0, 5, 10);
-                else if (type == "Omni")
-                    _currentAccount = new OmniAccount(accountId, 0, 5, 100, 10);
                 else
                 {
-                    Message.Items.Add("Invalid account type. Select Everyday / Investment / Omni.");
+                    MessageBox.Show("Customer not found");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Enter valid number");
+            }
+        }
+
+        // Create new account
+        private void btnCreateAccount_Click(object sender, EventArgs e)
+        {
+            int accId;
+            int customerNumber;
+
+            // Validate inputs
+            if (!int.TryParse(txtCusNumber.Text, out customerNumber))
+            {
+                MessageBox.Show("Enter valid customer number");
+                return;
+            }
+
+            if (!int.TryParse(txtAccID.Text, out accId))
+            {
+                MessageBox.Show("Enter valid account ID");
+                return;
+            }
+
+            // Find customer
+            var customer = customerData.FirstOrDefault(c => c.CustomerNumber == customerNumber);
+
+            if (customer == null)
+            {
+                MessageBox.Show("Customer not found");
+                return;
+            }
+
+            // Check duplicate account
+            bool exists = customerData.Any(c => c.Accounts.Any(a => a.AccountID == accId));
+            if (exists)
+            {
+                MessageBox.Show("Account ID already exists");
+                return;
+            }
+
+            // Create account based on type
+            if (cmbAccType.Text == "Everyday")
+                currentAccount = new EverydayAccount(accId, 0);
+            else if (cmbAccType.Text == "Investment")
+                currentAccount = new InvestmentAccount(accId, 0);
+            else
+                currentAccount = new OmniAccount(accId, 0);
+
+            // Add account to customer
+            customer.Accounts.Add(currentAccount);
+
+            // Add to combo boxes
+            cmbFromAcc.Items.Add(accId);
+            cmbToAcc.Items.Add(accId);
+
+            lstOutput.Items.Add("Account created");
+        }
+
+        // Deposit money
+        private void btnDeposit_Click(object sender, EventArgs e)
+        {
+            int accId;
+            double amount;
+
+            if (!int.TryParse(txtAccID.Text, out accId))
+            {
+                MessageBox.Show("Enter valid account ID");
+            }
+            else if (!double.TryParse(txtAmount.Text, out amount))
+            {
+                MessageBox.Show("Enter valid amount");
+            }
+            else
+            {
+                // Find account
+                foreach (var cust in customerData)
+                {
+                    foreach (var acc in cust.Accounts)
+                    {
+                        if (acc.AccountID == accId)
+                        {
+                            acc.Deposit(amount); // Add money
+                            lstOutput.Items.Add("Deposited $" + amount);
+                            return;
+                        }
+                    }
+                }
+
+                MessageBox.Show("Account not found");
+            }
+        }
+
+        // Withdraw money
+        private void btnWithdraw_Click(object sender, EventArgs e)
+        {
+            int accId;
+            double amount;
+
+            if (!int.TryParse(txtAccID.Text, out accId))
+            {
+                MessageBox.Show("Enter valid account ID");
+            }
+            else if (!double.TryParse(txtAmount.Text, out amount))
+            {
+                MessageBox.Show("Enter valid amount");
+            }
+            else
+            {
+                // Find account
+                foreach (var cust in customerData)
+                {
+                    foreach (var acc in cust.Accounts)
+                    {
+                        if (acc.AccountID == accId)
+                        {
+                            // Withdraw
+                            string result = acc.Withdraw(amount, cust.IsEmployee);
+                            lstOutput.Items.Add(result);
+                            lstOutput.Items.Add("Balance: $" + acc.Balance);
+                            return;
+                        }
+                    }
+                }
+
+                MessageBox.Show("Account not found");
+            }
+        }
+
+        // Calculate interest
+        private void btnCalculate_Click(object sender, EventArgs e)
+        {
+            int accId;
+
+            if (!int.TryParse(txtAccID.Text, out accId))
+            {
+                MessageBox.Show("Enter valid account ID");
+            }
+            else
+            {
+                foreach (var cust in customerData)
+                {
+                    foreach (var acc in cust.Accounts)
+                    {
+                        if (acc.AccountID == accId)
+                        {
+                            string result = acc.CalculateInterest();
+                            lstOutput.Items.Add(result);
+                            return;
+                        }
+                    }
+                }
+
+                MessageBox.Show("Account not found");
+            }
+        }
+
+        // Transfer money
+        private void btnTransfer_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int fromId = int.Parse(cmbFromAcc.Text);
+                int toId = int.Parse(cmbToAcc.Text);
+                double amount = double.Parse(txtTransferAmount.Text);
+
+                // Prevent same account transfer
+                if (fromId == toId)
+                {
+                    lstOutput.Items.Add("Cannot transfer to same account");
                     return;
                 }
 
-                Message.Items.Add($"Account Created: {type}{accountId}; Balance: ${_currentAccount.Balance:F2}");
+                Account fromAcc = null;
+                Account toAcc = null;
+                bool isStaff = false;
+
+                // Find accounts
+                foreach (var cust in customerData)
+                {
+                    foreach (var acc in cust.Accounts)
+                    {
+                        if (acc.AccountID == fromId)
+                        {
+                            fromAcc = acc;
+                            isStaff = cust.IsEmployee;
+                        }
+
+                        if (acc.AccountID == toId)
+                        {
+                            toAcc = acc;
+                        }
+                    }
+                }
+
+                if (fromAcc == null || toAcc == null)
+                {
+                    lstOutput.Items.Add("Account not found");
+                    return;
+                }
+
+                // Perform transfer
+                string result = fromAcc.TransferTo(toAcc, amount, isStaff);
+
+                lstOutput.Items.Add(result);
             }
-            catch (Exception ex)
+            catch
             {
-                Message.Items.Add(ex.Message);
+                lstOutput.Items.Add("Invalid transfer details");
             }
-        }
-
-        private void lstOutput_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void btnClear_Click(object sender, EventArgs e)
-        {
-            Message.Items.Clear();   // clear all messages
-            Message.Items.Add("Output cleared."); // show message
-        }
-
-        private void label6_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label9_Click(object sender, EventArgs e)
-        {
-
-        }
-
-    
-        private void btnWithdraw_Click(object sender, EventArgs e)
-        {
-            if (_currentAccount == null)
-            {
-                Message.Items.Add("Please create an account first.");
-                return;
-            }
-
-            double amount;
-
-            if (!double.TryParse(txtAmount.Text, out amount) || amount <= 0)
-            {
-                Message.Items.Add("Enter a valid withdraw amount.");
-                return;
-            }
-
-            bool isStaff = chkStaff.Checked;
-
-            string result = _currentAccount.Withdraw(amount, isStaff);
-
-            Message.Items.Add(result);
-            Message.Items.Add("Balance: $" + _currentAccount.Balance);
-
-            txtAmount.Clear();
-        }
-
-        private void btnDeposit_Click(object sender, EventArgs e)
-        {
-            if (_currentAccount == null)
-            {
-                Message.Items.Add("Please create an account first.");
-                return;
-            }
-
-            double amount;
-
-            if (!double.TryParse(txtAmount.Text, out amount) || amount <= 0)
-            {
-                Message.Items.Add("Enter a valid deposit amount.");
-                return;
-            }
-
-            _currentAccount.Deposit(amount);
-
-            Message.Items.Add("Deposit successful.");
-            Message.Items.Add("Balance: $" + _currentAccount.Balance);
-
-            txtAmount.Clear();
-        }
-
-        private void label8_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label7_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
         }
     }
 }

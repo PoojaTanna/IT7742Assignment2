@@ -1,57 +1,45 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
-    // EverydayAccount:
-    // - No interest
-    // - No overdraft
-    // - No failed transaction fee
+    // Everyday account type
+    [Serializable]
     public class EverydayAccount : Account
     {
-        public EverydayAccount(int id, double balance)
-            : base(id, balance, 0, 0, 0)
+        // Default constructor
+        public EverydayAccount() : base()
         {
+            InterestRate = 0; // No interest
+            OverdraftLimit = 0; // No overdraft
+            FailedFee = 0; // No fee
         }
 
+        // Constructor with values
+        public EverydayAccount(int accountID, double initialBalance)
+            : base(accountID, initialBalance)
+        {
+            InterestRate = 0;
+            OverdraftLimit = 0;
+            FailedFee = 0;
+        }
+
+        // Withdraw money
         public override string Withdraw(double amount, bool isStaff)
         {
             if (amount <= 0)
-            {
-                throw new WithdrawalException(
-                    $"Everyday{AccountID}; Withdrawal Failed - Invalid amount; Amount: ${amount:F2};",
-                    AccountID,
-                    Balance,
-                    amount
-                );
-            }
+                return "Enter valid amount"; // Invalid input
 
-            if (Balance < amount)
-            {
-                throw new WithdrawalException(
-                    $"Everyday{AccountID}; Withdrawal Failed - Insufficient Funds; Balance: ${Balance:F2};",
-                    AccountID,
-                    Balance,
-                    amount
-                );
-            }
+            if (amount > Balance)
+                return "Not enough balance"; // Not enough money
 
-            Balance -= amount;
-
-            return $"Everyday{AccountID}; Withdraw: ${amount:F2}; New Balance: ${Balance:F2};";
+            Balance -= amount; // Deduct amount
+            return "Withdraw successful";
         }
 
+        // No interest
         public override string CalculateInterest()
         {
-            return $"Everyday{AccountID}; No Interest Applied; Balance: ${Balance:F2};";
-        }
-
-        public override string GetAccountInfo()
-        {
-            return $"Everyday{AccountID}; Current Balance: ${Balance:F2};";
+            return "No interest for Everyday Account";
         }
     }
 }

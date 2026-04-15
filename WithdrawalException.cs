@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
-    // Custom exception for failed withdrawals
+    // Custom exception for withdrawal
     public class WithdrawalException : Exception
     {
-        public int AccountId { get; }
-        public double CurrentBalance { get; }
-        public double AttemptedAmount { get; }
+        public int AccountId { get; } // Account ID
+        public double CurrentBalance { get; } // Current balance
+        public double AttemptedAmount { get; } // Amount tried
 
+        // Constructor
         public WithdrawalException(string message, int accountId, double currentBalance, double attemptedAmount)
             : base(message)
         {

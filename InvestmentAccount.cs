@@ -1,63 +1,54 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
-    // InvestmentAccount:
-    // - Has interest
-    // - No overdraft
-    // - Charges failed transaction fee
+    // Investment account type
+    [Serializable]
     public class InvestmentAccount : Account
     {
-        public InvestmentAccount(int id, double balance, double interestRate, double failedFee)
-            : base(id, balance, interestRate, 0, failedFee)
+        // Default constructor
+        public InvestmentAccount() : base()
         {
+            InterestRate = 5; // 5% interest
+            OverdraftLimit = 0; // No overdraft
+            FailedFee = 10; // Fee on failure
         }
 
+        // Constructor with values
+        public InvestmentAccount(int accountID, double initialBalance)
+            : base(accountID, initialBalance)
+        {
+            InterestRate = 5;
+            OverdraftLimit = 0;
+            FailedFee = 10;
+        }
+
+        // Withdraw money
         public override string Withdraw(double amount, bool isStaff)
         {
             if (amount <= 0)
+                return "Enter valid amount"; // Invalid input
+
+            if (amount > Balance)
             {
-                throw new WithdrawalException(
-                    $"Investment{AccountID}; Withdrawal Failed - Invalid amount; Amount: ${amount:F2};",
-                    AccountID,
-                    Balance,
-                    amount
-                );
+                if (!isStaff)
+                {
+                    Balance -= FailedFee; // Deduct fee
+                    return "Not enough balance. Fee $" + FailedFee;
+                }
+                return "Not enough balance"; // Staff no fee
             }
 
-            if (Balance >= amount)
-            {
-                Balance -= amount;
-                return $"Investment{AccountID}; Withdrawal: ${amount:F2}; New Balance: ${Balance:F2};";
-            }
-
-            // Failed withdrawal → apply fee
-            double fee = isStaff ? FailedFee / 2 : FailedFee;
-            Balance -= fee;
-
-            throw new WithdrawalException(
-                $"Investment{AccountID}; Withdrawal Failed - Insufficient Funds; Fee Applied: ${fee:F2}; New Balance: ${Balance:F2};",
-                AccountID,
-                Balance,
-                amount
-            );
+            Balance -= amount; // Deduct amount
+            return "Withdraw successful";
         }
 
+        // Calculate interest
         public override string CalculateInterest()
         {
-            double interest = Balance * (InterestRate / 100);
-            Balance += interest;
-
-            return $"Investment{AccountID}; Interest Added: ${interest:F2}; New Balance: ${Balance:F2};";
-        }
-
-        public override string GetAccountInfo()
-        {
-            return $"Investment{AccountID}; Interest Rate: {InterestRate}%; Balance: ${Balance:F2}; Failed Fee: ${FailedFee:F2};";
+            double interest = Balance * (InterestRate / 100); // Calculate
+            Balance += interest; // Add interest
+            return "Interest added $" + interest + " New Balance $" + Balance;
         }
     }
 }

@@ -1,69 +1,62 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
-    // OmniAccount:
-    // - Has interest
-    // - Has overdraft
-    // - Charges failed transaction fee
+    // Omni account type
+    [Serializable]
     public class OmniAccount : Account
     {
-        public OmniAccount(int id, double balance, double interestRate, double overdraftLimit, double failedFee)
-            : base(id, balance, interestRate, overdraftLimit, failedFee)
+        // Default constructor
+        public OmniAccount() : base()
         {
+            InterestRate = 4; // 4% interest
+            OverdraftLimit = 100; // Overdraft allowed
+            FailedFee = 10; // Fee on failure
         }
 
+        // Constructor with values
+        public OmniAccount(int accountID, double initialBalance)
+            : base(accountID, initialBalance)
+        {
+            InterestRate = 4;
+            OverdraftLimit = 100;
+            FailedFee = 10;
+        }
+
+        // Withdraw money
         public override string Withdraw(double amount, bool isStaff)
         {
             if (amount <= 0)
+                return "Enter valid amount"; // Invalid input
+
+            if (amount > Balance + OverdraftLimit)
             {
-                throw new WithdrawalException(
-                    $"Omni{AccountID}; Withdrawal Failed - Invalid amount; Amount: ${amount:F2};",
-                    AccountID,
-                    Balance,
-                    amount
-                );
+                if (!isStaff)
+                {
+                    if (Balance >= FailedFee)
+                        Balance -= FailedFee; // Deduct fee
+
+                    return "Not enough balance. Fee $" + FailedFee;
+                }
+
+                return "Not enough balance"; // Staff no fee
             }
 
-            // allowed if balance + overdraft covers the amount
-            if (Balance + OverdraftLimit >= amount)
-            {
-                Balance -= amount;
-                return $"Omni{AccountID}; Withdrawal: ${amount:F2}; New Balance: ${Balance:F2};";
-            }
-
-            // Failed withdrawal → apply fee
-            double fee = isStaff ? FailedFee / 2 : FailedFee;
-            Balance -= fee;
-
-            throw new WithdrawalException(
-                $"Omni{AccountID}; Withdrawal Failed - Overdraft exceeded; Fee Applied: ${fee:F2}; New Balance: ${Balance:F2};",
-                AccountID,
-                Balance,
-                amount
-            );
+            Balance -= amount; // Deduct amount
+            return "Withdraw successful";
         }
 
+        // Calculate interest
         public override string CalculateInterest()
         {
-            // Interest only if balance > 1000
             if (Balance > 1000)
             {
-                double interest = Balance * (InterestRate / 100);
-                Balance += interest;
-                return $"Omni{AccountID}; Interest Added: ${interest:F2}; New Balance: ${Balance:F2};";
+                double interest = (Balance - 1000) * (InterestRate / 100); // Interest on extra amount
+                Balance += interest; // Add interest
+                return "Interest added $" + interest + " New Balance $" + Balance;
             }
 
-            return $"Omni{AccountID}; Balance below $1000. No Interest Applied; Balance: ${Balance:F2};";
-        }
-
-        public override string GetAccountInfo()
-        {
-            return $"Omni{AccountID}; Interest Rate: {InterestRate}%; Overdraft Limit: ${OverdraftLimit:F2}; Failed Fee: ${FailedFee:F2}; Balance: ${Balance:F2};";
+            return "No interest added as balance is below $1000.";
         }
     }
 }

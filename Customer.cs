@@ -1,30 +1,48 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
+    // Customer class
+    [Serializable]
     public class Customer
     {
-        public string CustomerName { get; private set; }
-        public string Email { get; private set; }
-        public bool IsEmployee { get; private set; }
+        // Customer details
+        public int CustomerNumber { get; set; } // ID
+        public string CustomerName { get; set; } // Name
+        public string Email { get; set; } // Email
+        public bool IsEmployee { get; set; } // Staff check
+        public List<Account> Accounts { get; set; } // Account list
 
-        public Customer(string name, string email, bool isEmployee)
+        // Default constructor
+        public Customer()
         {
+            Accounts = new List<Account>(); // Empty list
+        }
+
+        // Constructor with values
+        public Customer(int number, string name, string email, bool isEmployee)
+        {
+            CustomerNumber = number;
             CustomerName = name;
             Email = email;
             IsEmployee = isEmployee;
+            Accounts = new List<Account>(); // Empty list
         }
 
-        public void Update(string name, string email, bool isEmployee)
+        // Add account
+        public void AddAccount(Account account)
         {
-            CustomerName = name;
-            Email = email;
-            IsEmployee = isEmployee;
+            Accounts.Add(account); // Add to list
         }
 
+        // Show name and ID
         public override string ToString()
         {
-            return $"Customer_Name: {CustomerName} = Email: {Email} {(IsEmployee ? "Employee" : "Customer")}";
+            return CustomerName + " (" + CustomerNumber + ")";
         }
     }
 }

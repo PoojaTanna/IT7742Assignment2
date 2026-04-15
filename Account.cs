@@ -1,30 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Xml.Serialization;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
-    // Base class for all types of bank accounts
+    // Base account class
+    [Serializable]
+    [XmlInclude(typeof(EverydayAccount))]
+    [XmlInclude(typeof(InvestmentAccount))]
+    [XmlInclude(typeof(OmniAccount))]
     public abstract class Account
     {
-        // Unique ID number of the account
-        public int AccountID { get; private set; }
+        public int AccountID { get; set; } // ID
+        public double Balance { get; set; } // Balance
+        public double InterestRate { get; set; } // Interest %
+        public double OverdraftLimit { get; set; } // Overdraft
+        public double FailedFee { get; set; } // Fee
 
-        // Current money in the account
-        public double Balance { get; protected set; }
+        // Default constructor
+        protected Account()
+        {
+        }
 
-        // Interest percentage (if the account uses interest)
-        public double InterestRate { get; protected set; }
-
-        // Maximum overdraft allowed (for accounts that support overdraft)
-        public double OverdraftLimit { get; protected set; }
-
-        // Fee charged when a transaction fails (varies by account type)
-        public double FailedFee { get; protected set; }
-
-        // Constructor
+        // Constructor with values
         protected Account(int accountID, double balance, double interestRate = 0, double overdraftLimit = 0, double failedFee = 0)
         {
             AccountID = accountID;
@@ -34,17 +31,30 @@ namespace Bank_App2
             FailedFee = failedFee;
         }
 
-        // Deposit method: adds money to the account
+        // Add money
         public virtual void Deposit(double amount)
         {
-            Balance += amount;
+            Balance += amount; // Increase balance
         }
 
-        // Must be implemented by child classes
+        // Withdraw money
         public abstract string Withdraw(double amount, bool isStaff);
 
+        // Calculate interest
         public abstract string CalculateInterest();
 
-        public abstract string GetAccountInfo();
+        // Transfer money
+        public virtual string TransferTo(Account targetAccount, double amount, bool isStaff)
+        {
+            string result = this.Withdraw(amount, isStaff); // Try withdraw
+
+            if (result.Contains("Not enough") || result.Contains("failed"))
+            {
+                return "Transfer failed"; // If failed
+            }
+
+            targetAccount.Deposit(amount); // Add to target
+            return "Transfer successful";
+        }
     }
 }

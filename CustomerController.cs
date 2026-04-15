@@ -1,66 +1,70 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Bank_App2
+namespace Assignment3_Bank_App
 {
+    // Manage customers
     public class CustomerController
     {
-        private readonly List<Customer> _customers = new List<Customer>();
+        private List<Customer> customers = new List<Customer>(); // Customer list
 
-        public IReadOnlyList<Customer> GetAllCustomers()
+        // Add new customer
+        public void AddCustomer(int customerNumber, string name, string email, bool isEmployee)
         {
-            return _customers.AsReadOnly();
+            Customer customer = new Customer(customerNumber, name, email, isEmployee);
+            customers.Add(customer); // Add to list
         }
 
-        // Add customer
-        public void AddCustomer(string name, string email, bool isEmployee)
+        // Remove customer
+        public bool RemoveCustomer(int customerNumber)
         {
-            Validate(name, email);
+            Customer customerToRemove = customers.Find(c => c.CustomerNumber == customerNumber); // Find customer
 
-            // Email should be unique
-            if (_customers.Any(c => c.Email.Equals(email, StringComparison.OrdinalIgnoreCase)))
-                throw new InvalidOperationException("Customer with this email already exists.");
-
-            _customers.Add(new Customer(name, email, isEmployee));
+            if (customerToRemove != null)
+            {
+                customers.Remove(customerToRemove); // Remove
+                return true;
+            }
+            else
+            {
+                return false; // Not found
+            }
         }
 
-        // Update customer by email
-        public void UpdateCustomer(string email, string name, bool isEmployee)
+        // Update customer details
+        public bool UpdateCustomer(int customerNumber, string newName, string newEmail, bool newIsEmployee)
         {
-            Validate(name, email);
+            Customer customerToUpdate = customers.Find(c => c.CustomerNumber == customerNumber); // Find customer
 
-            var customer = _customers.FirstOrDefault(c =>
-                c.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-            if (customer == null)
-                throw new InvalidOperationException("Customer not found.");
-
-            customer.Update(name, email, isEmployee);
+            if (customerToUpdate != null)
+            {
+                customerToUpdate.CustomerName = newName;
+                customerToUpdate.Email = newEmail;
+                customerToUpdate.IsEmployee = newIsEmployee;
+                return true;
+            }
+            else
+            {
+                return false; // Not found
+            }
         }
 
-        // Remove customer by email
-        public void RemoveCustomer(string email)
+        // Get customer info
+        public string GetCustomerInfo(int customerNumber)
         {
-            if (string.IsNullOrWhiteSpace(email))
-                throw new ArgumentException("Email is required.");
+            Customer customer = customers.Find(c => c.CustomerNumber == customerNumber); // Find customer
 
-            var customer = _customers.FirstOrDefault(c =>
-                c.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-
-            if (customer == null)
-                throw new InvalidOperationException("Customer not found.");
-
-            _customers.Remove(customer);
-        }
-
-        private static void Validate(string name, string email)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name is required.");
-
-            if (string.IsNullOrWhiteSpace(email) || !email.Contains("@") || !email.Contains("."))
-                throw new ArgumentException("Email format is invalid.");
+            if (customer != null)
+            {
+                return customer.ToString(); // Return info
+            }
+            else
+            {
+                return "Customer not found";
+            }
         }
     }
 }
